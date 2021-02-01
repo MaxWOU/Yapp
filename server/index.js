@@ -7,8 +7,8 @@ const socket = require("socket.io")
 app.use(cors());
 app.use(express.json()); //this will allow us to communicate between front/backend
 
-const server = app.listen("3001", () => {
-    console.log("server runnin on port 3001");
+const server = app.listen("3000", () => {
+    console.log("server runnin on port 3000");
 });
 
 io = socket(server);
@@ -19,6 +19,11 @@ io.on("connection", (socket)=> {
     socket.on("join_room", (data) => {
         socket.join(data) // data is the name of the room created.
         console.log( 'User has joined Room: ' + data)
+    })
+
+    socket.on("send_message", (data) => {
+        socket.to(data.room).emit("recieve_message", data.content);
+
     })
 
     socket.on("disconnect", () => {
