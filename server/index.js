@@ -11,28 +11,22 @@ const server = app.listen(3000, () => {
     console.log("server runnin on port 3000");
 });
 
-const io = socket(server);
+io = socket(server);
 
+io.on("connection", (socket) => {
+  console.log(socket.id);
 
+  socket.on("join_room", (data) => {
+    socket.join(data);
+    console.log("User Joined Room: " + data);
+  });
 
-io.on('connection', function(socket) {
-    console.log(socket.id) //different unique IDs logged
+  socket.on("send_message", (data) => {
+    console.log(data);
+    socket.to(data.room).emit("receive_message", data.content);
+  });
+
+  socket.on("disconnect", () => {
+    console.log("USER DISCONNECTED");
+  });
 });
-    
-io.on("join_room", (data) => {
-        socket.join(data) // data is the name of the room created.
-        console.log( 'User has joined Room: ' + data)
-    });
-
-    io.on("send_message", (data) => {
-        console.log(data);
-        socket.to(data.room).emit("recieve_message", data.content);
-    });
-
-    io.on("disconnect", () => {
-        console.log('USER DISCONNECTED')
-    }); //recoognize and disconnect a user
-
-    //sockets are good to communicate data between
-    //users without needing a database to 
-    //send/recieve for both parties.

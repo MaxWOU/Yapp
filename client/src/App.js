@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import io from "socket.io-client";
 import "./App.css";
 
 let socket;
-const CONNECTION_PORT = "localhost:3000";
+const CONNECTION_PORT = "localhost:3000/";
 var room_name = "Room";
 
 
@@ -14,51 +13,46 @@ const timestamp =  cd.toLocaleString('en-US', { hour: 'numeric', minute: 'numeri
 function App() {
   
   //before login
-  const [loggedIn, setLoggedIn] = useState(false); //check whether or not you entered a room or not.
-  const [room, setRoom] = useState(""); // a value of the room we're in
-  const [userName, setUserName] = useState(""); // value of the user name
+  const [loggedIn, setLoggedIn] = useState(false) //check whether or not you entered a room or not.
+  const [room, setRoom] = useState("") // a value of the room we're in
+  const [userName, setUserName] = useState("") // value of the user name
 
   
   //after login
   const [message, setMessage] = useState("") // our default msg.
-  const [messageList, setMessageList] = useState([]);
+  const [messageList, setMessageList] = useState([{author: "max", msg: "hello, world.", time: timestamp}]);
 
+  
   useEffect(() => {//initialize that kind of connection
-    socket = io(CONNECTION_PORT); //initializes the connection
-  }, [CONNECTION_PORT]); //pass connection port so it doesn't loop for inf.
+    socket = io(CONNECTION_PORT) //initializes the connection
+  }, [CONNECTION_PORT]) //pass connection port so it doesn't loop for inf.
 
   useEffect(() => {
-    socket.on("recieve_message", (data) => {
-      console.log(data);
-    })
-  })
-
-  const connectToRoom = () => { //whenever we press the Enter ROom button it fires function
-    setLoggedIn(true);
-    socket.emit("join_room", room); //referencing join_room from Backend Index.Js
-    room_name = room.toString();
-  }; //basic syntax of Socket.IO
-
-  var cd = new Date(); //current date/time
-  var local_time =  cd.toLocaleString('en-US', { hour: 'numeric', minute: 'numeric', hour12: true });
-  
-
-  const sendMessage = async () =>
+  socket.on("recieve_message", (data) =>
   {
+    setMessageList([...messageList, data]);
+  })});
+
+  const connectToRoom = () => {
+    setLoggedIn(true);
+    socket.emit("join_room", room);
+    room_name = room;
+  };
+
+  const sendMessage = async () => {
     let messageMD = {
       room: room,
       content: {
         author: userName,
-        message: message,
-        time: local_time
+        msg: message,
+        time: timestamp
       }
-    } // message meta data
+    }; // message meta data
 
-    socket.emit("send_message", messageMD);
-
-    setMessageList([...messageList, message.content]);
-    setMessage("")    
-  };
+    await socket.emit("send_message", messageMD);
+    setMessageList([...messageList, messageMD.content]);
+    setMessage(""); 
+  }
   
   return (
     <div className="App">
@@ -66,12 +60,12 @@ function App() {
         !loggedIn ? //if false
         ( 
           <div className="logIn">
-            <div className="ui inverted segment">
-              <div className="ui inverted form">
-                <div className="two fields">
-                  <div className="field">
+            <div class="ui inverted segment">
+              <div class="ui inverted form">
+                <div class="two fields">
+                  <div class="field">
                     <label>Name</label>
-                      <div className="ui left icon input">
+                      <div class="ui left icon input">
                         <input 
                             type="text" 
                             placeholder="Name..." 
@@ -80,13 +74,13 @@ function App() {
                               setUserName(e.target.value);
                             }} 
                         />
-                        <i className="user icon" />
+                        <i class="user icon" />
                       </div>
                   </div>
 
-                  <div className="field">
+                  <div class="field">
                     <label>Room</label>
-                    <div className="ui left icon input" >
+                    <div class="ui left icon input" >
                       <input 
                         type="text" 
                         placeholder="Room..." 
@@ -95,51 +89,42 @@ function App() {
                           setRoom(e.target.value);
                         }} 
                       />
-                      <i className="door closed icon"/>                    
+                      <i class="door closed icon"/>                    
                     </div>
                   </div>
                 </div>
-                <div className="inline field">
-                  <div className="ui checkbox">
-                    <input type="checkbox" tabindex="0" className="hidden"/>
+                <div class="inline field">
+                  <div class="ui checkbox">
+                    <input type="checkbox" tabindex="0" class="hidden"/>
                     <label>I agree to the terms and conditions</label>
                   </div>
                 </div>
-                <button className="ui submit button" onClick={connectToRoom} >Enter</button>
+                <button class="ui submit button" onClick={connectToRoom} >Enter</button>
               </div>
             </div>
             
           </div>
         ) : (
           <div className="chatContainer">
-              <table className="ui inverted table">
+              <table class="ui inverted table">
                 <thead>
                   <tr>
-                    <th colSpan="3">{room_name} joined at <span className="ui red text">{timestamp}</span></th>
+                    <th colSpan="3">{room_name} joined at <span class="ui red text">{timestamp}</span></th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                  <td className="center aligned" colSpan="3">
-                    <div className="messages">
-                      {
-                        messageList.map((key, val) => 
-                        {
-                          return(
-                            <p>
-                              {key.author} {key.message} 
-                              <p style="text-size: 8px;">{key.time}</p>
-                            </p>
-                          )
-                        })
-
-                      }
+                  <td class="center aligned" colSpan="3">
+                    <div className="chatMessages">
+                      {messageList.map((key, val) => {
+                        return(<h2>{key.author} {key.msg} {key.time}</h2>)
+                      })}
                     </div>
                   </td>
                   </tr>
                   <tr>
                     <td colSpan="2">
-                    <div className="ui input">
+                    <div class="ui input">
                         <textarea type="text" 
                         onChange={(e) => 
                         {
@@ -147,7 +132,7 @@ function App() {
                         }}></textarea>
                     </div>
                       </td>
-                    <td className="right aligned"><button className="ui inverted green button" onClick={sendMessage}>send</button></td>
+                    <td class="right aligned"><button class="ui inverted green button" onClick={sendMessage}>send</button></td>
                   </tr>
                 </tbody>
               </table>
@@ -159,4 +144,3 @@ function App() {
 }
 
 export default App;
-
